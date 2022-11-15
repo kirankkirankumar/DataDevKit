@@ -11,6 +11,7 @@ type Todo {
 
 
 input NewTodo {
+  id: ID!
   text: String!
   userId: String!
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/kirankkirankumar/gqlgen-ddk/service"
 )
 
-const defaultPort = "8082"
+const defaultPort = "8080"
 
 func main() {
 	port := os.Getenv("PORT")

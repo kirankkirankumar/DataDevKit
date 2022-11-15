@@ -69,9 +69,9 @@ func (s *service) MigrateModels() {
 			y := temp1[0]
 			if strings.Contains(y, "int") {
 				if !(strings.Contains(query, "NUMERIC") || strings.Contains(query, "TEXT") || strings.Contains(query, "JSON") || strings.Contains(query, "BOOLEAN")) {
-					query = query + " NUMERIC PRIMARY KEY, "
+					query = query + " int PRIMARY KEY, "
 				} else {
-					query = query + " NUMERIC, "
+					query = query + " int , "
 				}
 			} else if strings.Contains(y, "string") {
 				if !(strings.Contains(query, "NUMERIC") || strings.Contains(query, "TEXT") || strings.Contains(query, "JSON") || strings.Contains(query, "BOOLEAN")) {
@@ -114,17 +114,16 @@ func (s *service) MigrateModels() {
 			} else {
 			}
 
-			// Reseting the query and len variable for tracking Primary Key
+	    // Reseting the query and len variable for tracking Primary Key
 		} else if strings.Contains(temp, "}") {
 			query = query[:len(query)-2] + " );"
 			if strings.Contains(query, "interface") {
 				fmt.Println("Interface Not Allowed..")
 			} else {
-				// ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
-				// defer cancelfunc()
+				
 				fmt.Println(query)
 				err := s.Repo.ExecQuery(query)
-				// fmt.Println(res)
+			     fmt.Println(res)
 				if err != nil {
 					log.Printf("Error %s when creating product table", err)
 				}
@@ -135,18 +134,23 @@ func (s *service) MigrateModels() {
 		} else {
 		}
 	}
+	// Table creation code ends here 
+
 	fmt.Println("Migrated Successfully..")
+	fmt.Println(relation_map)
+	fmt.Println(m)
 
 	//ALter Table
 	/*for index, element := range m {
-		alterQuery := "alter table public."
+		fmt.Println(index)
+		fmt.Println(element)
+
+		alterQuery := "alter table "
 		x := relation_map[index]
-		// alterQuery = alterQuery + checkReserveKeyword(index)
 		alterQuery = alterQuery + index
 		for id, record := range element {
 			alterQuery = alterQuery + " add column "
-			// target_element := checkReserveKeyword(record)
-			// target_relation_field := checkReserveKeyword(x[id])
+			
 
 			target_element := record
 			target_relation_field := x[id]
@@ -162,7 +166,7 @@ func (s *service) MigrateModels() {
 		if err != nil {
 			log.Printf("Error %s when creating product table", err)
 		}
-		alterQuery = "alter table public."
+		alterQuery = "alter table "
 
 	}*/
 

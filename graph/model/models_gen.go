@@ -11,6 +11,7 @@ type Meta struct {
 }
 
 type NewTodo struct {
+	ID     string `json:"id"`
 	Text   string `json:"text"`
 	UserID string `json:"userId"`
 }
