@@ -17,7 +17,8 @@ func (r *repository) UpdateSchema(entry *model.Schema_Entry) error {
 
 func (r *repository) MigrateSchema(name string, table interface{}) error {
 
-	err := r.db.Table(name).AutoMigrate(table)
+	
+	err := r.db.AutoMigrate(table)
 
 	return err
 }

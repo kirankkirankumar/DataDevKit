@@ -3,8 +3,10 @@ package repository
 import (
 	"fmt"
 
+	"github.com/kirankkirankumar/gqlgen-ddk/model"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Config struct {
@@ -19,6 +21,8 @@ type Config struct {
 type Repository interface {
 	//VideoRepository
 	SchemaRepository
+	GetData(model interface{}) error
+
 }
 
 type repository struct {
@@ -41,4 +45,29 @@ func NewRepository(config *Config) (Repository, error) {
 
 	return r, nil
 
+}
+func migrateSchemaOnLoad(db *gorm.DB) {
+	db.AutoMigrate(&model.Schema_Entry{})
+
+	
+}
+
+func (r *repository) GetData(model interface{}) error {
+
+	// for _, tables := range preLoad {
+	// 	db.Preload(tables)
+	// }
+	result := r.db.Preload(clause.Associations).Find(model)
+
+	return result.Error
+}
+
+func (r *repository) createData(model interface{}) error {
+
+	// for _, tables := range preLoad {
+	// 	db.Preload(tables)
+	// }
+	result := r.db.Preload(clause.Associations).Find(model)
+
+	return result.Error
 }

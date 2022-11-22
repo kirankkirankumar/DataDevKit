@@ -3,54 +3,139 @@
 package model
 
 import (
+	"fmt"
+	"io"
+	"strconv"
 	"time"
+
+	"gorm.io/gorm"
 )
 
-type Meta struct {
-	Count int `json:"count"`
+type Event struct {
+	ID     int        `json:"id" gorm:"autoIncrement; primaryKey"`
+	Date   *time.Time `json:"date" `
+	Total  *int       `json:"total" `
+	Type   string     `json:"type" `
+	Status Status     `json:"status" `
+
+	CreatedAt int // Set to current time if it is zero on creating
+	UpdatedAt int // Set to current unix seconds on updating or if it is zero on creating
+	Deleted   gorm.DeletedAt
 }
 
-type NewTodo struct {
-	ID     string `json:"id"`
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+type Meta struct {
+	Count int `json:"count" `
+
+	CreatedAt int // Set to current time if it is zero on creating
+	UpdatedAt int // Set to current unix seconds on updating or if it is zero on creating
+	Deleted   gorm.DeletedAt
 }
 
 type Notification struct {
-	ID   string    `json:"id"`
-	Date time.Time `json:"date"`
-	Type string    `json:"type"`
+	ID    int        `json:"id" gorm:"autoIncrement; primaryKey"`
+	Date  *time.Time `json:"date" `
+	Total int        `json:"total" `
+	Type  *string    `json:"type" gorm:"column:type;uniqueIndex"`
+
+	CreatedAt int // Set to current time if it is zero on creating
+	UpdatedAt int // Set to current unix seconds on updating or if it is zero on creating
+	Deleted   gorm.DeletedAt
 }
 
 type Stat struct {
-	ID        string `json:"id"`
-	Views     int    `json:"views"`
-	Likes     int    `json:"likes"`
-	Retweets  int    `json:"retweets"`
-	Responses int    `json:"responses"`
-}
+	ID        int `json:"id" `
+	Views     int `json:"views" `
+	Likes     int `json:"likes" `
+	Retweets  int `json:"retweets" `
+	Total     int `json:"total" `
+	Responses int `json:"responses" `
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+	CreatedAt int // Set to current time if it is zero on creating
+	UpdatedAt int // Set to current unix seconds on updating or if it is zero on creating
+	Deleted   gorm.DeletedAt
 }
 
 type Tweet struct {
-	ID     string    `json:"id"`
-	Body   string    `json:"body"`
-	Date   time.Time `json:"date"`
-	Author *User     `json:"Author"`
-	Stats  *Stat     `json:"Stats"`
+	ID       int       `json:"id" gorm:"autoIncrement; primaryKey"`
+	Body     string    `json:"body" `
+	Date     time.Time `json:"date" `
+	AuthorID string    `json:"author_id" gorm:"unique"`
+	Author   *User     `json:"Author" gorm:"many2many:Author_User;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	StatsID  string    `json:"stats_id" gorm:"unique"`
+	Stats    *Stat     `json:"Stats" gorm:"foreignKey:StatsID"`
+
+	CreatedAt int // Set to current time if it is zero on creating
+	UpdatedAt int // Set to current unix seconds on updating or if it is zero on creating
+	Deleted   gorm.DeletedAt
 }
 
 type User struct {
-	ID        string `json:"id"`
-	Username  string `json:"username"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	FullName  string `json:"full_name"`
-	Name      string `json:"name"`
-	AvatarURL string `json:"avatar_url"`
+	ID        int    `json:"id" gorm:"autoIncrement; primaryKey"`
+	Username  string `json:"username" `
+	FirstName string `json:"first_name" `
+	LastName  string `json:"last_name" `
+	FullName  string `json:"full_name" `
+	Name      string `json:"name" `
+	AvatarURL string `json:"avatar_url" `
+
+	CreatedAt int // Set to current time if it is zero on creating
+	UpdatedAt int // Set to current unix seconds on updating or if it is zero on creating
+	Deleted   gorm.DeletedAt
+}
+
+type Status string
+
+const (
+	StatusStarted    Status = "STARTED"
+	StatusInprogress Status = "INPROGRESS"
+	StatusCompleted  Status = "COMPLETED"
+)
+
+var AllStatus = []Status{
+	StatusStarted,
+	StatusInprogress,
+	StatusCompleted,
+}
+
+func (e Status) IsValid() bool {
+	switch e {
+	case StatusStarted, StatusInprogress, StatusCompleted:
+		return true
+	}
+	return false
+}
+
+func (e Status) String() string {
+	return string(e)
+}
+
+func (e *Status) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Status(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Status", str)
+	}
+	return nil
+}
+
+func (e Status) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func GetStructs() map[string]interface{} {
+
+	structs := make(map[string]interface{}, 0)
+
+	structs["Event"] = Event{}
+	structs["Meta"] = Meta{}
+	structs["Notification"] = Notification{}
+	structs["Stat"] = Stat{}
+	structs["Tweet"] = Tweet{}
+	structs["User"] = User{}
+
+	return structs
 }

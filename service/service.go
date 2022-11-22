@@ -7,12 +7,10 @@ import (
 )
 
 type Service interface {
-	//ParseFile(r *http.Request) (*model.Schema, error)
-	//FileSave(r *http.Request) (string, string, error)
+	
 	GenerateModel() error
-	//Middleware() func(http.Handler) http.Handler
 	MigrateModels()
-	//CtxValue(ctx context.Context) *model.Claims
+	writeData() error
 }
 
 type service struct {
@@ -24,3 +22,4 @@ func NewService(repo repository.Repository) (Service, error) {
 
 	return &service{Repo: repo}, nil
 }
+

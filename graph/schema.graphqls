@@ -1,32 +1,14 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
-
-type Todo {
-  id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
-}
-
-
-input NewTodo {
-  id: ID!
-  text: String!
-  userId: String!
-}
-
-
 scalar Url
 scalar Time
+scalar JSON
 
 type User {
-    id: ID!
+    id: ID!@mapping(type:"primarykey")
     username: String!
     first_name: String!
     last_name: String!  
     full_name: String!
-    name: String! @deprecated
+    name: String! 
     avatar_url: Url!
 }
 
@@ -35,35 +17,33 @@ type Stat {
     views: Int!
     likes: Int!
     retweets: Int!
+    total:Int!
     responses: Int!
 }
 
 
 type Tweet {
-    id: ID!
+    id: ID! @mapping(type:"primarykey")
     # The tweet text. No more than 140 characters!
     body: String!
     # When the tweet was published
     date: Time!
     # Who published the tweet
-    Author: User!
+    Author: User! @mapping(type :"many2many")
     # Views, retweets, likes, etc
     Stats: Stat!
 }
 
-
-
 type Notification {
-    id: ID!
-    date: Time!
-    type: String!
+    id: ID! @mapping(type:"primarykey")
+    date: Time
+    total:Int! 
+    type: String @mapping(type:"unique")
 }
 
 type Meta {
     count: Int!
 }
-
-
 
 type Query {
     Tweet(id: ID!): Tweet
@@ -72,6 +52,25 @@ type Query {
     User(id: ID!): User
     Notifications(limit: Int): [Notification]
     NotificationsMeta: Meta
+    Events : Event
+}
+
+enum Status{
+
+    STARTED,
+    INPROGRESS,
+    COMPLETED
+
+}
+
+type Event {
+
+    id: ID! @mapping(type:"primarykey")
+    date: Time
+    total:Int
+    type: String!
+    status:Status!
+
 }
 
 type Mutation {
@@ -80,4 +79,9 @@ type Mutation {
     ): Tweet
     deleteTweet(id: ID!): Tweet
     markTweetRead(id: ID!): Boolean
+    deleteEvent(id: ID!): Event
 }
+
+directive @mapping(type: String = "Directive used on fields in graphql entities") on FIELD_DEFINITION
+
+

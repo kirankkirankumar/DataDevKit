@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func (s *service) MigrateModels() {
+func (s *service) MigrateModel() {
 	file, err := os.Open("graph/model/models_gen.go")
 	if err != nil {
 		log.Fatalf("failed to open")
@@ -123,7 +123,7 @@ func (s *service) MigrateModels() {
 				
 				fmt.Println(query)
 				err := s.Repo.ExecQuery(query)
-			     fmt.Println(res)
+			     //fmt.Println(res)
 				if err != nil {
 					log.Printf("Error %s when creating product table", err)
 				}

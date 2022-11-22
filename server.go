@@ -5,18 +5,26 @@ import (
 	"net/http"
 	"os"
 	"fmt"
+	//"time"
+	"context"
 
-	"github.com/99designs/gqlgen/graphql/handler"
+	gqlHandler "github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/kirankkirankumar/gqlgen-ddk/graph"
 	"github.com/kirankkirankumar/gqlgen-ddk/graph/generated"
 	"github.com/kirankkirankumar/gqlgen-ddk/repository"
 	"github.com/kirankkirankumar/gqlgen-ddk/service"
+	"github.com/go-chi/chi"
+	"github.com/kirankkirankumar/gqlgen-ddk/handler"
+	"github.com/99designs/gqlgen/graphql"
 )
 
-const defaultPort = "8080"
+const defaultPort = "8089"
+
+
 
 func main() {
+	
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
@@ -36,16 +44,44 @@ func main() {
 		log.Fatal("could not connect to db")
 	}
     
+	//started
 	fmt.Printf("Welcome")
 	s, err := service.NewService(repo)
 
+	//s.GenerateModel()
 	s.MigrateModels()
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	h := &handler.Handler{
+		Repo:    repo,
+		Service: s}
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	c := generated.Config{Resolvers: &graph.Resolver{Repo: repo}}
+
+    c.Directives.Mapping = func(ctx context.Context, obj interface{}, next graphql.Resolver, typeArg *string) (interface{}, error) {
+
+      return next(ctx)
+
+   }
+
+
+
+    srv := gqlHandler.NewDefaultServer(
+
+        generated.NewExecutableSchema(c))
+	
+	router := chi.NewRouter()
+	router.Route("/", func(r chi.Router) {
+		
+		r.Handle("/", playground.Handler("GraphQL playground", "/query"))
+		r.Handle("/query", srv)
+		r.HandleFunc("/upload-schema", h.WriteFile)
+	})
+	
+	
+	
+	//http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	//http.Handle("/query", srv)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }

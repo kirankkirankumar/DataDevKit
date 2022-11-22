@@ -5,3 +5,7 @@ type Schema_Entry struct {
 	Name    string
 	Updated int64 `gorm:"autoUpdateTime:milli"`
 }
+
+type SchemaData struct{
+	Data string 
+}
