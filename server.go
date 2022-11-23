@@ -63,6 +63,10 @@ func main() {
 
    }
 
+   c.Directives.Constraint = func(ctx context.Context, obj interface{}, next graphql.Resolver, typeArg *string, value *string) (interface{}, error) {
+	return next(ctx)
+}
+
 
 
     srv := gqlHandler.NewDefaultServer(

@@ -41,16 +41,28 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
-	Mapping func(ctx context.Context, obj interface{}, next graphql.Resolver, typeArg *string) (res interface{}, err error)
+	Constraint func(ctx context.Context, obj interface{}, next graphql.Resolver, typeArg *string, value *string) (res interface{}, err error)
+	Mapping    func(ctx context.Context, obj interface{}, next graphql.Resolver, typeArg *string) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
-	Event struct {
-		Date   func(childComplexity int) int
-		ID     func(childComplexity int) int
-		Status func(childComplexity int) int
-		Total  func(childComplexity int) int
-		Type   func(childComplexity int) int
+	Author struct {
+		Dob   func(childComplexity int) int
+		ID    func(childComplexity int) int
+		Name  func(childComplexity int) int
+		Posts func(childComplexity int) int
+	}
+
+	Blog struct {
+		ID   func(childComplexity int) int
+		Text func(childComplexity int) int
+	}
+
+	Blogger struct {
+		Blogs    func(childComplexity int) int
+		ID       func(childComplexity int) int
+		Username func(childComplexity int) int
+		Views    func(childComplexity int) int
 	}
 
 	Meta struct {
@@ -58,21 +70,28 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateTweet   func(childComplexity int, body *string) int
-		DeleteEvent   func(childComplexity int, id int) int
+		CreateTweet   func(childComplexity int, body *string, data *string) int
 		DeleteTweet   func(childComplexity int, id int) int
 		MarkTweetRead func(childComplexity int, id int) int
+		Notification  func(childComplexity int, total *int, typeArg *string, status *model.Status) int
 	}
 
 	Notification struct {
-		Date  func(childComplexity int) int
-		ID    func(childComplexity int) int
-		Total func(childComplexity int) int
-		Type  func(childComplexity int) int
+		Date   func(childComplexity int) int
+		ID     func(childComplexity int) int
+		Status func(childComplexity int) int
+		Total  func(childComplexity int) int
+		Type   func(childComplexity int) int
+	}
+
+	Post struct {
+		DatePublished func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Text          func(childComplexity int) int
+		Title         func(childComplexity int) int
 	}
 
 	Query struct {
-		Events            func(childComplexity int) int
 		Notifications     func(childComplexity int, limit *int) int
 		NotificationsMeta func(childComplexity int) int
 		Tweet             func(childComplexity int, id int) int
@@ -93,6 +112,7 @@ type ComplexityRoot struct {
 	Tweet struct {
 		Author func(childComplexity int) int
 		Body   func(childComplexity int) int
+		Data   func(childComplexity int) int
 		Date   func(childComplexity int) int
 		ID     func(childComplexity int) int
 		Stats  func(childComplexity int) int
@@ -110,10 +130,10 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateTweet(ctx context.Context, body *string) (*model.Tweet, error)
+	CreateTweet(ctx context.Context, body *string, data *string) (*model.Tweet, error)
 	DeleteTweet(ctx context.Context, id int) (*model.Tweet, error)
 	MarkTweetRead(ctx context.Context, id int) (*bool, error)
-	DeleteEvent(ctx context.Context, id int) (*model.Event, error)
+	Notification(ctx context.Context, total *int, typeArg *string, status *model.Status) (*model.Notification, error)
 }
 type QueryResolver interface {
 	Tweet(ctx context.Context, id int) (*model.Tweet, error)
@@ -122,7 +142,6 @@ type QueryResolver interface {
 	User(ctx context.Context, id int) (*model.User, error)
 	Notifications(ctx context.Context, limit *int) ([]*model.Notification, error)
 	NotificationsMeta(ctx context.Context) (*model.Meta, error)
-	Events(ctx context.Context) (*model.Event, error)
 }
 
 type executableSchema struct {
@@ -140,40 +159,75 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "Event.date":
-		if e.complexity.Event.Date == nil {
+	case "Author.dob":
+		if e.complexity.Author.Dob == nil {
 			break
 		}
 
-		return e.complexity.Event.Date(childComplexity), true
+		return e.complexity.Author.Dob(childComplexity), true
 
-	case "Event.id":
-		if e.complexity.Event.ID == nil {
+	case "Author.id":
+		if e.complexity.Author.ID == nil {
 			break
 		}
 
-		return e.complexity.Event.ID(childComplexity), true
+		return e.complexity.Author.ID(childComplexity), true
 
-	case "Event.status":
-		if e.complexity.Event.Status == nil {
+	case "Author.name":
+		if e.complexity.Author.Name == nil {
 			break
 		}
 
-		return e.complexity.Event.Status(childComplexity), true
+		return e.complexity.Author.Name(childComplexity), true
 
-	case "Event.total":
-		if e.complexity.Event.Total == nil {
+	case "Author.Posts":
+		if e.complexity.Author.Posts == nil {
 			break
 		}
 
-		return e.complexity.Event.Total(childComplexity), true
+		return e.complexity.Author.Posts(childComplexity), true
 
-	case "Event.type":
-		if e.complexity.Event.Type == nil {
+	case "Blog.id":
+		if e.complexity.Blog.ID == nil {
 			break
 		}
 
-		return e.complexity.Event.Type(childComplexity), true
+		return e.complexity.Blog.ID(childComplexity), true
+
+	case "Blog.text":
+		if e.complexity.Blog.Text == nil {
+			break
+		}
+
+		return e.complexity.Blog.Text(childComplexity), true
+
+	case "Blogger.blogs":
+		if e.complexity.Blogger.Blogs == nil {
+			break
+		}
+
+		return e.complexity.Blogger.Blogs(childComplexity), true
+
+	case "Blogger.id":
+		if e.complexity.Blogger.ID == nil {
+			break
+		}
+
+		return e.complexity.Blogger.ID(childComplexity), true
+
+	case "Blogger.username":
+		if e.complexity.Blogger.Username == nil {
+			break
+		}
+
+		return e.complexity.Blogger.Username(childComplexity), true
+
+	case "Blogger.views":
+		if e.complexity.Blogger.Views == nil {
+			break
+		}
+
+		return e.complexity.Blogger.Views(childComplexity), true
 
 	case "Meta.count":
 		if e.complexity.Meta.Count == nil {
@@ -192,19 +246,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateTweet(childComplexity, args["body"].(*string)), true
-
-	case "Mutation.deleteEvent":
-		if e.complexity.Mutation.DeleteEvent == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deleteEvent_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeleteEvent(childComplexity, args["id"].(int)), true
+		return e.complexity.Mutation.CreateTweet(childComplexity, args["body"].(*string), args["data"].(*string)), true
 
 	case "Mutation.deleteTweet":
 		if e.complexity.Mutation.DeleteTweet == nil {
@@ -230,6 +272,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.MarkTweetRead(childComplexity, args["id"].(int)), true
 
+	case "Mutation.notification":
+		if e.complexity.Mutation.Notification == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_notification_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Notification(childComplexity, args["total"].(*int), args["type"].(*string), args["status"].(*model.Status)), true
+
 	case "Notification.date":
 		if e.complexity.Notification.Date == nil {
 			break
@@ -243,6 +297,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Notification.ID(childComplexity), true
+
+	case "Notification.status":
+		if e.complexity.Notification.Status == nil {
+			break
+		}
+
+		return e.complexity.Notification.Status(childComplexity), true
 
 	case "Notification.total":
 		if e.complexity.Notification.Total == nil {
@@ -258,12 +319,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Notification.Type(childComplexity), true
 
-	case "Query.Events":
-		if e.complexity.Query.Events == nil {
+	case "Post.datePublished":
+		if e.complexity.Post.DatePublished == nil {
 			break
 		}
 
-		return e.complexity.Query.Events(childComplexity), true
+		return e.complexity.Post.DatePublished(childComplexity), true
+
+	case "Post.id":
+		if e.complexity.Post.ID == nil {
+			break
+		}
+
+		return e.complexity.Post.ID(childComplexity), true
+
+	case "Post.text":
+		if e.complexity.Post.Text == nil {
+			break
+		}
+
+		return e.complexity.Post.Text(childComplexity), true
+
+	case "Post.title":
+		if e.complexity.Post.Title == nil {
+			break
+		}
+
+		return e.complexity.Post.Title(childComplexity), true
 
 	case "Query.Notifications":
 		if e.complexity.Query.Notifications == nil {
@@ -382,6 +464,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Tweet.Body(childComplexity), true
+
+	case "Tweet.Data":
+		if e.complexity.Tweet.Data == nil {
+			break
+		}
+
+		return e.complexity.Tweet.Data(childComplexity), true
 
 	case "Tweet.date":
 		if e.complexity.Tweet.Date == nil {
@@ -524,8 +613,22 @@ var sources = []*ast.Source{
 scalar Time
 scalar JSON
 
+enum Status{
+    STARTED,
+    INPROGRESS,
+    COMPLETED
+}
+
+type Notification {
+    id: ID! @constraint(type:"primarykey")
+    date: Time
+    total:Int @constraint(type:"check",value:"total > 0 ")
+    type: String
+    status:Status
+}
+
 type User {
-    id: ID!@mapping(type:"primarykey")
+    id: ID! @constraint(type:"primarykey")
     username: String!
     first_name: String!
     last_name: String!  
@@ -535,7 +638,7 @@ type User {
 }
 
 type Stat {
-    id: ID!
+    id: ID! @constraint(type:"primarykey")
     views: Int!
     likes: Int!
     retweets: Int!
@@ -545,26 +648,31 @@ type Stat {
 
 
 type Tweet {
-    id: ID! @mapping(type:"primarykey")
-    # The tweet text. No more than 140 characters!
+    id: ID! @constraint(type:"primarykey")
     body: String!
-    # When the tweet was published
     date: Time!
-    # Who published the tweet
-    Author: User! @mapping(type :"many2many")
-    # Views, retweets, likes, etc
+    Author: User!
     Stats: Stat!
+    Data:JSON
 }
 
-type Notification {
-    id: ID! @mapping(type:"primarykey")
-    date: Time
-    total:Int! 
-    type: String @mapping(type:"unique")
-}
 
 type Meta {
     count: Int!
+}
+
+type Post {
+    id: ID! @constraint(type:"primarykey")
+    title: String!
+    text: String
+    datePublished: Time
+}
+
+type Author {
+    id: ID! @constraint(type:"primarykey")
+    name: String!
+    dob: Time @constraint(type:"default",value:"now()")
+    Posts: [Post] @mapping(type:"many2many")
 }
 
 type Query {
@@ -574,46 +682,65 @@ type Query {
     User(id: ID!): User
     Notifications(limit: Int): [Notification]
     NotificationsMeta: Meta
-    Events : Event
-}
-
-enum Status{
-
-    STARTED,
-    INPROGRESS,
-    COMPLETED
-
-}
-
-type Event {
-
-    id: ID! @mapping(type:"primarykey")
-    date: Time
-    total:Int
-    type: String!
-    status:Status!
-
 }
 
 type Mutation {
     createTweet (
         body: String
+        data: JSON
     ): Tweet
     deleteTweet(id: ID!): Tweet
     markTweetRead(id: ID!): Boolean
-    deleteEvent(id: ID!): Event
+    notification(total:Int
+    type: String
+    status:Status):Notification
 }
 
-directive @mapping(type: String = "Directive used on fields in graphql entities") on FIELD_DEFINITION
+directive @mapping(type: String = "Used for many to many") on FIELD_DEFINITION
+directive @constraint(type: String,value: String) on FIELD_DEFINITION
 
 
-`, BuiltIn: false},
+type Blogger {
+    id :ID! @constraint(type:"primarykey")
+    username: String!
+    blogs : [Blog]
+    views : Int @constraint(type:"autoincrement")
+}
+
+type Blog {
+    id :ID! @constraint(type:"primarykey")
+    text: String!
+}`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) dir_constraint_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["type"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["type"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["value"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["value"] = arg1
+	return args, nil
+}
 
 func (ec *executionContext) dir_mapping_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -642,21 +769,15 @@ func (ec *executionContext) field_Mutation_createTweet_args(ctx context.Context,
 		}
 	}
 	args["body"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_deleteEvent_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+	var arg1 *string
+	if tmp, ok := rawArgs["data"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("data"))
+		arg1, err = ec.unmarshalOJSON2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["id"] = arg0
+	args["data"] = arg1
 	return args, nil
 }
 
@@ -687,6 +808,39 @@ func (ec *executionContext) field_Mutation_markTweetRead_args(ctx context.Contex
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_notification_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["total"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("total"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["total"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["type"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["type"] = arg1
+	var arg2 *model.Status
+	if tmp, ok := rawArgs["status"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+		arg2, err = ec.unmarshalOStatus2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐStatus(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["status"] = arg2
 	return args, nil
 }
 
@@ -830,8 +984,8 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Event_id(ctx context.Context, field graphql.CollectedField, obj *model.Event) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Event_id(ctx, field)
+func (ec *executionContext) _Author_id(ctx context.Context, field graphql.CollectedField, obj *model.Author) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Author_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -852,10 +1006,10 @@ func (ec *executionContext) _Event_id(ctx context.Context, field graphql.Collect
 			if err != nil {
 				return nil, err
 			}
-			if ec.directives.Mapping == nil {
-				return nil, errors.New("directive mapping is not implemented")
+			if ec.directives.Constraint == nil {
+				return nil, errors.New("directive constraint is not implemented")
 			}
-			return ec.directives.Mapping(ctx, obj, directive0, typeArg)
+			return ec.directives.Constraint(ctx, obj, directive0, typeArg, nil)
 		}
 
 		tmp, err := directive1(rctx)
@@ -885,9 +1039,9 @@ func (ec *executionContext) _Event_id(ctx context.Context, field graphql.Collect
 	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Event_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Author_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Event",
+		Object:     "Author",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -898,8 +1052,8 @@ func (ec *executionContext) fieldContext_Event_id(ctx context.Context, field gra
 	return fc, nil
 }
 
-func (ec *executionContext) _Event_date(ctx context.Context, field graphql.CollectedField, obj *model.Event) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Event_date(ctx, field)
+func (ec *executionContext) _Author_name(ctx context.Context, field graphql.CollectedField, obj *model.Author) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Author_name(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -912,89 +1066,7 @@ func (ec *executionContext) _Event_date(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Date, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*time.Time)
-	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Event_date(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Event",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Event_total(ctx context.Context, field graphql.CollectedField, obj *model.Event) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Event_total(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Total, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*int)
-	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Event_total(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Event",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Event_type(ctx context.Context, field graphql.CollectedField, obj *model.Event) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Event_type(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Type, nil
+		return obj.Name, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1011,9 +1083,9 @@ func (ec *executionContext) _Event_type(ctx context.Context, field graphql.Colle
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Event_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Author_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Event",
+		Object:     "Author",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -1024,8 +1096,220 @@ func (ec *executionContext) fieldContext_Event_type(ctx context.Context, field g
 	return fc, nil
 }
 
-func (ec *executionContext) _Event_status(ctx context.Context, field graphql.CollectedField, obj *model.Event) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Event_status(ctx, field)
+func (ec *executionContext) _Author_dob(ctx context.Context, field graphql.CollectedField, obj *model.Author) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Author_dob(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Dob, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalOString2ᚖstring(ctx, "default")
+			if err != nil {
+				return nil, err
+			}
+			value, err := ec.unmarshalOString2ᚖstring(ctx, "now()")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Constraint == nil {
+				return nil, errors.New("directive constraint is not implemented")
+			}
+			return ec.directives.Constraint(ctx, obj, directive0, typeArg, value)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*time.Time); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *time.Time`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Author_dob(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Author",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Author_Posts(ctx context.Context, field graphql.CollectedField, obj *model.Author) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Author_Posts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Posts, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalOString2ᚖstring(ctx, "many2many")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Mapping == nil {
+				return nil, errors.New("directive mapping is not implemented")
+			}
+			return ec.directives.Mapping(ctx, obj, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.Post); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/kirankkirankumar/gqlgen-ddk/graph/model.Post`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Post)
+	fc.Result = res
+	return ec.marshalOPost2ᚕᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐPost(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Author_Posts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Author",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Post_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Post_title(ctx, field)
+			case "text":
+				return ec.fieldContext_Post_text(ctx, field)
+			case "datePublished":
+				return ec.fieldContext_Post_datePublished(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Post", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Blog_id(ctx context.Context, field graphql.CollectedField, obj *model.Blog) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Blog_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.ID, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalOString2ᚖstring(ctx, "primarykey")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Constraint == nil {
+				return nil, errors.New("directive constraint is not implemented")
+			}
+			return ec.directives.Constraint(ctx, obj, directive0, typeArg, nil)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(int); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be int`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Blog_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Blog",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Blog_text(ctx context.Context, field graphql.CollectedField, obj *model.Blog) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Blog_text(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1038,7 +1322,7 @@ func (ec *executionContext) _Event_status(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
+		return obj.Text, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1050,19 +1334,243 @@ func (ec *executionContext) _Event_status(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Status)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNStatus2githubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐStatus(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Event_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Blog_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Event",
+		Object:     "Blog",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Status does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Blogger_id(ctx context.Context, field graphql.CollectedField, obj *model.Blogger) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Blogger_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.ID, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalOString2ᚖstring(ctx, "primarykey")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Constraint == nil {
+				return nil, errors.New("directive constraint is not implemented")
+			}
+			return ec.directives.Constraint(ctx, obj, directive0, typeArg, nil)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(int); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be int`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Blogger_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Blogger",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Blogger_username(ctx context.Context, field graphql.CollectedField, obj *model.Blogger) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Blogger_username(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Username, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Blogger_username(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Blogger",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Blogger_blogs(ctx context.Context, field graphql.CollectedField, obj *model.Blogger) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Blogger_blogs(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Blogs, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Blog)
+	fc.Result = res
+	return ec.marshalOBlog2ᚕᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐBlog(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Blogger_blogs(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Blogger",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Blog_id(ctx, field)
+			case "text":
+				return ec.fieldContext_Blog_text(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Blog", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Blogger_views(ctx context.Context, field graphql.CollectedField, obj *model.Blogger) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Blogger_views(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Views, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalOString2ᚖstring(ctx, "autoincrement")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Constraint == nil {
+				return nil, errors.New("directive constraint is not implemented")
+			}
+			return ec.directives.Constraint(ctx, obj, directive0, typeArg, nil)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*int); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *int`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Blogger_views(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Blogger",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1126,7 +1634,7 @@ func (ec *executionContext) _Mutation_createTweet(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateTweet(rctx, fc.Args["body"].(*string))
+		return ec.resolvers.Mutation().CreateTweet(rctx, fc.Args["body"].(*string), fc.Args["data"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1158,6 +1666,8 @@ func (ec *executionContext) fieldContext_Mutation_createTweet(ctx context.Contex
 				return ec.fieldContext_Tweet_Author(ctx, field)
 			case "Stats":
 				return ec.fieldContext_Tweet_Stats(ctx, field)
+			case "Data":
+				return ec.fieldContext_Tweet_Data(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Tweet", field.Name)
 		},
@@ -1222,6 +1732,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteTweet(ctx context.Contex
 				return ec.fieldContext_Tweet_Author(ctx, field)
 			case "Stats":
 				return ec.fieldContext_Tweet_Stats(ctx, field)
+			case "Data":
+				return ec.fieldContext_Tweet_Data(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Tweet", field.Name)
 		},
@@ -1292,8 +1804,8 @@ func (ec *executionContext) fieldContext_Mutation_markTweetRead(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_deleteEvent(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteEvent(ctx, field)
+func (ec *executionContext) _Mutation_notification(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_notification(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1306,7 +1818,7 @@ func (ec *executionContext) _Mutation_deleteEvent(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteEvent(rctx, fc.Args["id"].(int))
+		return ec.resolvers.Mutation().Notification(rctx, fc.Args["total"].(*int), fc.Args["type"].(*string), fc.Args["status"].(*model.Status))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1315,12 +1827,12 @@ func (ec *executionContext) _Mutation_deleteEvent(ctx context.Context, field gra
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Event)
+	res := resTmp.(*model.Notification)
 	fc.Result = res
-	return ec.marshalOEvent2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐEvent(ctx, field.Selections, res)
+	return ec.marshalONotification2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐNotification(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deleteEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_notification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1329,17 +1841,17 @@ func (ec *executionContext) fieldContext_Mutation_deleteEvent(ctx context.Contex
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Event_id(ctx, field)
+				return ec.fieldContext_Notification_id(ctx, field)
 			case "date":
-				return ec.fieldContext_Event_date(ctx, field)
+				return ec.fieldContext_Notification_date(ctx, field)
 			case "total":
-				return ec.fieldContext_Event_total(ctx, field)
+				return ec.fieldContext_Notification_total(ctx, field)
 			case "type":
-				return ec.fieldContext_Event_type(ctx, field)
+				return ec.fieldContext_Notification_type(ctx, field)
 			case "status":
-				return ec.fieldContext_Event_status(ctx, field)
+				return ec.fieldContext_Notification_status(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Event", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Notification", field.Name)
 		},
 	}
 	defer func() {
@@ -1349,7 +1861,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteEvent(ctx context.Contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteEvent_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_notification_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -1378,10 +1890,10 @@ func (ec *executionContext) _Notification_id(ctx context.Context, field graphql.
 			if err != nil {
 				return nil, err
 			}
-			if ec.directives.Mapping == nil {
-				return nil, errors.New("directive mapping is not implemented")
+			if ec.directives.Constraint == nil {
+				return nil, errors.New("directive constraint is not implemented")
 			}
-			return ec.directives.Mapping(ctx, obj, directive0, typeArg)
+			return ec.directives.Constraint(ctx, obj, directive0, typeArg, nil)
 		}
 
 		tmp, err := directive1(rctx)
@@ -1478,22 +1990,47 @@ func (ec *executionContext) _Notification_total(ctx context.Context, field graph
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Total, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Total, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalOString2ᚖstring(ctx, "check")
+			if err != nil {
+				return nil, err
+			}
+			value, err := ec.unmarshalOString2ᚖstring(ctx, "total > 0 ")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Constraint == nil {
+				return nil, errors.New("directive constraint is not implemented")
+			}
+			return ec.directives.Constraint(ctx, obj, directive0, typeArg, value)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*int); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *int`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Notification_total(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1522,32 +2059,8 @@ func (ec *executionContext) _Notification_type(ctx context.Context, field graphq
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return obj.Type, nil
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalOString2ᚖstring(ctx, "unique")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.Mapping == nil {
-				return nil, errors.New("directive mapping is not implemented")
-			}
-			return ec.directives.Mapping(ctx, obj, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1569,6 +2082,241 @@ func (ec *executionContext) fieldContext_Notification_type(ctx context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Notification_status(ctx context.Context, field graphql.CollectedField, obj *model.Notification) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Notification_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Status)
+	fc.Result = res
+	return ec.marshalOStatus2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Notification_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Notification",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Status does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Post_id(ctx context.Context, field graphql.CollectedField, obj *model.Post) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Post_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.ID, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalOString2ᚖstring(ctx, "primarykey")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Constraint == nil {
+				return nil, errors.New("directive constraint is not implemented")
+			}
+			return ec.directives.Constraint(ctx, obj, directive0, typeArg, nil)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(int); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be int`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Post_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Post",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Post_title(ctx context.Context, field graphql.CollectedField, obj *model.Post) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Post_title(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Post_title(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Post",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Post_text(ctx context.Context, field graphql.CollectedField, obj *model.Post) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Post_text(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Text, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Post_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Post",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Post_datePublished(ctx context.Context, field graphql.CollectedField, obj *model.Post) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Post_datePublished(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DatePublished, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Post_datePublished(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Post",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1620,6 +2368,8 @@ func (ec *executionContext) fieldContext_Query_Tweet(ctx context.Context, field 
 				return ec.fieldContext_Tweet_Author(ctx, field)
 			case "Stats":
 				return ec.fieldContext_Tweet_Stats(ctx, field)
+			case "Data":
+				return ec.fieldContext_Tweet_Data(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Tweet", field.Name)
 		},
@@ -1684,6 +2434,8 @@ func (ec *executionContext) fieldContext_Query_Tweets(ctx context.Context, field
 				return ec.fieldContext_Tweet_Author(ctx, field)
 			case "Stats":
 				return ec.fieldContext_Tweet_Stats(ctx, field)
+			case "Data":
+				return ec.fieldContext_Tweet_Data(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Tweet", field.Name)
 		},
@@ -1859,6 +2611,8 @@ func (ec *executionContext) fieldContext_Query_Notifications(ctx context.Context
 				return ec.fieldContext_Notification_total(ctx, field)
 			case "type":
 				return ec.fieldContext_Notification_type(ctx, field)
+			case "status":
+				return ec.fieldContext_Notification_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Notification", field.Name)
 		},
@@ -1917,59 +2671,6 @@ func (ec *executionContext) fieldContext_Query_NotificationsMeta(ctx context.Con
 				return ec.fieldContext_Meta_count(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meta", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_Events(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_Events(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Events(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Event)
-	fc.Result = res
-	return ec.marshalOEvent2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐEvent(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_Events(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Event_id(ctx, field)
-			case "date":
-				return ec.fieldContext_Event_date(ctx, field)
-			case "total":
-				return ec.fieldContext_Event_total(ctx, field)
-			case "type":
-				return ec.fieldContext_Event_type(ctx, field)
-			case "status":
-				return ec.fieldContext_Event_status(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Event", field.Name)
 		},
 	}
 	return fc, nil
@@ -2117,8 +2818,32 @@ func (ec *executionContext) _Stat_id(ctx context.Context, field graphql.Collecte
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.ID, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalOString2ᚖstring(ctx, "primarykey")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Constraint == nil {
+				return nil, errors.New("directive constraint is not implemented")
+			}
+			return ec.directives.Constraint(ctx, obj, directive0, typeArg, nil)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(int); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be int`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2390,10 +3115,10 @@ func (ec *executionContext) _Tweet_id(ctx context.Context, field graphql.Collect
 			if err != nil {
 				return nil, err
 			}
-			if ec.directives.Mapping == nil {
-				return nil, errors.New("directive mapping is not implemented")
+			if ec.directives.Constraint == nil {
+				return nil, errors.New("directive constraint is not implemented")
 			}
-			return ec.directives.Mapping(ctx, obj, directive0, typeArg)
+			return ec.directives.Constraint(ctx, obj, directive0, typeArg, nil)
 		}
 
 		tmp, err := directive1(rctx)
@@ -2537,32 +3262,8 @@ func (ec *executionContext) _Tweet_Author(ctx context.Context, field graphql.Col
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return obj.Author, nil
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalOString2ᚖstring(ctx, "many2many")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.Mapping == nil {
-				return nil, errors.New("directive mapping is not implemented")
-			}
-			return ec.directives.Mapping(ctx, obj, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kirankkirankumar/gqlgen-ddk/graph/model.User`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return obj.Author, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2666,6 +3367,47 @@ func (ec *executionContext) fieldContext_Tweet_Stats(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Tweet_Data(ctx context.Context, field graphql.CollectedField, obj *model.Tweet) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tweet_Data(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Data, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOJSON2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tweet_Data(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tweet",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type JSON does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_id(ctx, field)
 	if err != nil {
@@ -2688,10 +3430,10 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 			if err != nil {
 				return nil, err
 			}
-			if ec.directives.Mapping == nil {
-				return nil, errors.New("directive mapping is not implemented")
+			if ec.directives.Constraint == nil {
+				return nil, errors.New("directive constraint is not implemented")
 			}
-			return ec.directives.Mapping(ctx, obj, directive0, typeArg)
+			return ec.directives.Constraint(ctx, obj, directive0, typeArg, nil)
 		}
 
 		tmp, err := directive1(rctx)
@@ -4779,45 +5521,116 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** object.gotpl ****************************
 
-var eventImplementors = []string{"Event"}
+var authorImplementors = []string{"Author"}
 
-func (ec *executionContext) _Event(ctx context.Context, sel ast.SelectionSet, obj *model.Event) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, eventImplementors)
+func (ec *executionContext) _Author(ctx context.Context, sel ast.SelectionSet, obj *model.Author) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, authorImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Event")
+			out.Values[i] = graphql.MarshalString("Author")
 		case "id":
 
-			out.Values[i] = ec._Event_id(ctx, field, obj)
+			out.Values[i] = ec._Author_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "date":
+		case "name":
 
-			out.Values[i] = ec._Event_date(ctx, field, obj)
-
-		case "total":
-
-			out.Values[i] = ec._Event_total(ctx, field, obj)
-
-		case "type":
-
-			out.Values[i] = ec._Event_type(ctx, field, obj)
+			out.Values[i] = ec._Author_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "status":
+		case "dob":
 
-			out.Values[i] = ec._Event_status(ctx, field, obj)
+			out.Values[i] = ec._Author_dob(ctx, field, obj)
+
+		case "Posts":
+
+			out.Values[i] = ec._Author_Posts(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var blogImplementors = []string{"Blog"}
+
+func (ec *executionContext) _Blog(ctx context.Context, sel ast.SelectionSet, obj *model.Blog) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, blogImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Blog")
+		case "id":
+
+			out.Values[i] = ec._Blog_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "text":
+
+			out.Values[i] = ec._Blog_text(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var bloggerImplementors = []string{"Blogger"}
+
+func (ec *executionContext) _Blogger(ctx context.Context, sel ast.SelectionSet, obj *model.Blogger) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, bloggerImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Blogger")
+		case "id":
+
+			out.Values[i] = ec._Blogger_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "username":
+
+			out.Values[i] = ec._Blogger_username(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "blogs":
+
+			out.Values[i] = ec._Blogger_blogs(ctx, field, obj)
+
+		case "views":
+
+			out.Values[i] = ec._Blogger_views(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4894,10 +5707,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_markTweetRead(ctx, field)
 			})
 
-		case "deleteEvent":
+		case "notification":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteEvent(ctx, field)
+				return ec._Mutation_notification(ctx, field)
 			})
 
 		default:
@@ -4936,12 +5749,56 @@ func (ec *executionContext) _Notification(ctx context.Context, sel ast.Selection
 
 			out.Values[i] = ec._Notification_total(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "type":
 
 			out.Values[i] = ec._Notification_type(ctx, field, obj)
+
+		case "status":
+
+			out.Values[i] = ec._Notification_status(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var postImplementors = []string{"Post"}
+
+func (ec *executionContext) _Post(ctx context.Context, sel ast.SelectionSet, obj *model.Post) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, postImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Post")
+		case "id":
+
+			out.Values[i] = ec._Post_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "title":
+
+			out.Values[i] = ec._Post_title(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "text":
+
+			out.Values[i] = ec._Post_text(ctx, field, obj)
+
+		case "datePublished":
+
+			out.Values[i] = ec._Post_datePublished(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -5093,26 +5950,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "Events":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_Events(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
 		case "__type":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -5244,6 +6081,10 @@ func (ec *executionContext) _Tweet(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "Data":
+
+			out.Values[i] = ec._Tweet_Data(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5698,16 +6539,6 @@ func (ec *executionContext) marshalNStat2ᚖgithubᚗcomᚋkirankkirankumarᚋgq
 	return ec._Stat(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNStatus2githubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐStatus(ctx context.Context, v interface{}) (model.Status, error) {
-	var res model.Status
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNStatus2githubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐStatus(ctx context.Context, sel ast.SelectionSet, v model.Status) graphql.Marshaler {
-	return v
-}
-
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6016,6 +6847,54 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) marshalOBlog2ᚕᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐBlog(ctx context.Context, sel ast.SelectionSet, v []*model.Blog) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOBlog2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐBlog(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOBlog2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐBlog(ctx context.Context, sel ast.SelectionSet, v *model.Blog) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Blog(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6042,13 +6921,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOEvent2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐEvent(ctx context.Context, sel ast.SelectionSet, v *model.Event) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Event(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
 	if v == nil {
 		return nil, nil
@@ -6062,6 +6934,22 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 	res := graphql.MarshalInt(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOJSON2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOJSON2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalString(*v)
 	return res
 }
 
@@ -6118,6 +7006,70 @@ func (ec *executionContext) marshalONotification2ᚖgithubᚗcomᚋkirankkiranku
 		return graphql.Null
 	}
 	return ec._Notification(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOPost2ᚕᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐPost(ctx context.Context, sel ast.SelectionSet, v []*model.Post) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOPost2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐPost(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOPost2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐPost(ctx context.Context, sel ast.SelectionSet, v *model.Post) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Post(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOStatus2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐStatus(ctx context.Context, v interface{}) (*model.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.Status)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOStatus2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐStatus(ctx context.Context, sel ast.SelectionSet, v *model.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

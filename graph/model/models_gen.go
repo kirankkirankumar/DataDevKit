@@ -11,12 +11,33 @@ import (
 	"gorm.io/gorm"
 )
 
-type Event struct {
-	ID     int        `json:"id" gorm:"autoIncrement; primaryKey"`
-	Date   *time.Time `json:"date" `
-	Total  *int       `json:"total" `
-	Type   string     `json:"type" `
-	Status Status     `json:"status" `
+type Author struct {
+	ID      int        `json:"id" gorm:"autoIncrement; primaryKey"`
+	Name    string     `json:"name" `
+	Dob     *time.Time `json:"dob" gorm:"default:now()"`
+	PostsID string     `json:"posts_id" gorm:"unique"`
+	Posts   []*Post    `json:"Posts" gorm:"many2many:Author_Post;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+
+	CreatedAt int // Set to current time if it is zero on creating
+	UpdatedAt int // Set to current unix seconds on updating or if it is zero on creating
+	Deleted   gorm.DeletedAt
+}
+
+type Blog struct {
+	ID   int    `json:"id" gorm:"autoIncrement; primaryKey"`
+	Text string `json:"text" `
+
+	CreatedAt int // Set to current time if it is zero on creating
+	UpdatedAt int // Set to current unix seconds on updating or if it is zero on creating
+	Deleted   gorm.DeletedAt
+}
+
+type Blogger struct {
+	ID       int     `json:"id" gorm:"autoIncrement; primaryKey"`
+	Username string  `json:"username" `
+	BlogsID  string  `json:"blogs_id" gorm:"unique"`
+	Blogs    []*Blog `json:"blogs" gorm:"foreignKey:ID;references:BlogsID"`
+	Views    *int    `json:"views" gorm:"autoIncrement"`
 
 	CreatedAt int // Set to current time if it is zero on creating
 	UpdatedAt int // Set to current unix seconds on updating or if it is zero on creating
@@ -32,10 +53,22 @@ type Meta struct {
 }
 
 type Notification struct {
-	ID    int        `json:"id" gorm:"autoIncrement; primaryKey"`
-	Date  *time.Time `json:"date" `
-	Total int        `json:"total" `
-	Type  *string    `json:"type" gorm:"column:type;uniqueIndex"`
+	ID     int        `json:"id" gorm:"autoIncrement; primaryKey"`
+	Date   *time.Time `json:"date" `
+	Total  *int       `json:"total" gorm:"check:total > 0 "`
+	Type   *string    `json:"type" `
+	Status *Status    `json:"status" `
+
+	CreatedAt int // Set to current time if it is zero on creating
+	UpdatedAt int // Set to current unix seconds on updating or if it is zero on creating
+	Deleted   gorm.DeletedAt
+}
+
+type Post struct {
+	ID            int        `json:"id" gorm:"autoIncrement; primaryKey"`
+	Title         string     `json:"title" `
+	Text          *string    `json:"text" `
+	DatePublished *time.Time `json:"datePublished" `
 
 	CreatedAt int // Set to current time if it is zero on creating
 	UpdatedAt int // Set to current unix seconds on updating or if it is zero on creating
@@ -43,7 +76,7 @@ type Notification struct {
 }
 
 type Stat struct {
-	ID        int `json:"id" `
+	ID        int `json:"id" gorm:"autoIncrement; primaryKey"`
 	Views     int `json:"views" `
 	Likes     int `json:"likes" `
 	Retweets  int `json:"retweets" `
@@ -60,9 +93,10 @@ type Tweet struct {
 	Body     string    `json:"body" `
 	Date     time.Time `json:"date" `
 	AuthorID string    `json:"author_id" gorm:"unique"`
-	Author   *User     `json:"Author" gorm:"many2many:Author_User;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Author   *User     `json:"Author" gorm:"foreignKey:AuthorID"`
 	StatsID  string    `json:"stats_id" gorm:"unique"`
 	Stats    *Stat     `json:"Stats" gorm:"foreignKey:StatsID"`
+	Data     *string   `json:"Data" `
 
 	CreatedAt int // Set to current time if it is zero on creating
 	UpdatedAt int // Set to current unix seconds on updating or if it is zero on creating
@@ -130,9 +164,12 @@ func GetStructs() map[string]interface{} {
 
 	structs := make(map[string]interface{}, 0)
 
-	structs["Event"] = Event{}
+	structs["Author"] = Author{}
+	structs["Blog"] = Blog{}
+	structs["Blogger"] = Blogger{}
 	structs["Meta"] = Meta{}
 	structs["Notification"] = Notification{}
+	structs["Post"] = Post{}
 	structs["Stat"] = Stat{}
 	structs["Tweet"] = Tweet{}
 	structs["User"] = User{}

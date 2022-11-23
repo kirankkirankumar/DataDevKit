@@ -2,8 +2,22 @@ scalar Url
 scalar Time
 scalar JSON
 
+enum Status{
+    STARTED,
+    INPROGRESS,
+    COMPLETED
+}
+
+type Notification {
+    id: ID! @constraint(type:"primarykey")
+    date: Time
+    total:Int @constraint(type:"check",value:"total > 0 ")
+    type: String
+    status:Status
+}
+
 type User {
-    id: ID!@mapping(type:"primarykey")
+    id: ID! @constraint(type:"primarykey")
     username: String!
     first_name: String!
     last_name: String!  
@@ -13,7 +27,7 @@ type User {
 }
 
 type Stat {
-    id: ID!
+    id: ID! @constraint(type:"primarykey")
     views: Int!
     likes: Int!
     retweets: Int!
@@ -23,26 +37,31 @@ type Stat {
 
 
 type Tweet {
-    id: ID! @mapping(type:"primarykey")
-    # The tweet text. No more than 140 characters!
+    id: ID! @constraint(type:"primarykey")
     body: String!
-    # When the tweet was published
     date: Time!
-    # Who published the tweet
-    Author: User! @mapping(type :"many2many")
-    # Views, retweets, likes, etc
+    Author: User!
     Stats: Stat!
+    Data:JSON
 }
 
-type Notification {
-    id: ID! @mapping(type:"primarykey")
-    date: Time
-    total:Int! 
-    type: String @mapping(type:"unique")
-}
 
 type Meta {
     count: Int!
+}
+
+type Post {
+    id: ID! @constraint(type:"primarykey")
+    title: String!
+    text: String
+    datePublished: Time
+}
+
+type Author {
+    id: ID! @constraint(type:"primarykey")
+    name: String!
+    dob: Time @constraint(type:"default",value:"now()")
+    Posts: [Post] @mapping(type:"many2many")
 }
 
 type Query {
@@ -52,36 +71,32 @@ type Query {
     User(id: ID!): User
     Notifications(limit: Int): [Notification]
     NotificationsMeta: Meta
-    Events : Event
-}
-
-enum Status{
-
-    STARTED,
-    INPROGRESS,
-    COMPLETED
-
-}
-
-type Event {
-
-    id: ID! @mapping(type:"primarykey")
-    date: Time
-    total:Int
-    type: String!
-    status:Status!
-
 }
 
 type Mutation {
     createTweet (
         body: String
+        data: JSON
     ): Tweet
     deleteTweet(id: ID!): Tweet
     markTweetRead(id: ID!): Boolean
-    deleteEvent(id: ID!): Event
+    notification(total:Int
+    type: String
+    status:Status):Notification
 }
 
-directive @mapping(type: String = "Directive used on fields in graphql entities") on FIELD_DEFINITION
+directive @mapping(type: String = "Used for many to many") on FIELD_DEFINITION
+directive @constraint(type: String,value: String) on FIELD_DEFINITION
 
 
+type Blogger {
+    id :ID! @constraint(type:"primarykey")
+    username: String!
+    blogs : [Blog]
+    views : Int @constraint(type:"autoincrement")
+}
+
+type Blog {
+    id :ID! @constraint(type:"primarykey")
+    text: String!
+}

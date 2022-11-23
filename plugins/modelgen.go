@@ -193,16 +193,15 @@ func (m *Plugin) MutateConfig(cfg *config.Config) error {
 						Gorm:        `gorm:"unique"`,
 					})
 
-					gormType = fmt.Sprintf(`gorm:"foreignKey:%s"`, name+"ID")
+					gormType = fmt.Sprintf(`gorm:"foreignKey:%s"`, strings.Title(name)+"ID")
 
-					order[field.Type.Name()] = struct{}{}
 
 				}
 
 				if isArray(typ) && (fieldDef.Kind == ast.Object || fieldDef.Kind == ast.InputObject) {
 
 					typ.String()
-					it.Fields = append(it.Fields, &Field{
+					field := &Field{
 						Name: name + "ID",
 						Type: types.NewNamed(
 							types.NewTypeName(0, cfg.Model.Pkg(), "string", nil),
@@ -212,15 +211,15 @@ func (m *Plugin) MutateConfig(cfg *config.Config) error {
 						Description: field.Description,
 						Tag:         `json:"` + strings.ToLower(field.Name) + `_id"`,
 						Gorm:        `gorm:"unique"`,
-					})
+					}
+					it.Fields = append(it.Fields, field)
 
-					gormType = fmt.Sprintf(`gorm:"foreignKey:ID;references:%s"`, name+"ID")
+					gormType = fmt.Sprintf(`gorm:"foreignKey:ID;references:%s"`, strings.Title(name)+"ID")
 
-					order[field.Type.Name()] = struct{}{}
 
 				}
 
-				directive := field.Directives.ForName("mapping")
+				/*directive := field.Directives.ForName("mapping")
 				if directive != nil {
 					arg := directive.Arguments.ForName("type")
 					if arg != nil {
@@ -239,6 +238,9 @@ func (m *Plugin) MutateConfig(cfg *config.Config) error {
 						}else if arg.Value.Raw == "autoincrement" {
 							gormType = fmt.Sprintf(`gorm:"autoIncrement"`)
 
+						}else if arg.Value.Raw == "notnull" {
+							gormType = fmt.Sprintf(`gorm:"not null"`)
+
 						}else if arg.Value.Raw == "index" {
 							gormType = fmt.Sprintf(`gorm:"index"`)
 
@@ -247,6 +249,10 @@ func (m *Plugin) MutateConfig(cfg *config.Config) error {
 					} else {
 						gormType = fmt.Sprintf(`gorm:"column:%s"`, field.Name)
 					}
+				}*/
+				value:=getTagFromDirectives(field,schemaType.Name)
+				if value!=""{
+				gormType = value
 				}
 
 				it.Fields = append(it.Fields, &Field{
@@ -345,5 +351,90 @@ func SetMapValue(key string, value string) string {
 func concatString(key string) string {
 	log.Panicln(key)
 	return "$model." + key
+
+}
+
+func getTagFromDirectives(field *ast.FieldDefinition,schemaName string) string {
+
+	gormType := ""
+
+	directive := field.Directives.ForName("mapping")
+	if directive != nil {
+
+		arg := directive.Arguments.ForName("type")
+
+		if arg != nil {
+
+			if arg.Value.Raw == "many2many" {
+
+				gormType = fmt.Sprintf(`gorm:"many2many:%s;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`, schemaName+"_"+field.Type.Name())
+
+			} else if arg.Value.Raw == "one2many" {
+
+				gormType = fmt.Sprintf(`gorm:"foreignKey:ID;references:%s;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`,strings.Title(field.Name))
+
+			}else if arg.Value.Raw == "one2one" {
+
+				gormType = fmt.Sprintf(`gorm:"foriegnKey:%s;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`, strings.Title(field.Name))
+
+			}
+
+		} else {
+
+			gormType = fmt.Sprintf(`gorm:"column:%s"`, field.Name)
+
+		}
+
+	}
+
+	directive = field.Directives.ForName("constraint")
+	if directive != nil {
+
+		arg := directive.Arguments.ForName("type")
+
+		if arg != nil {
+
+			if arg.Value.Raw == "check" {
+
+				value := directive.Arguments.ForName("value").Value.Raw
+
+				gormType = fmt.Sprintf(`gorm:"check:%s"`, value)
+
+			} else if arg.Value.Raw == "default" {
+
+				value := directive.Arguments.ForName("value").Value.Raw
+
+				gormType = fmt.Sprintf(`gorm:"default:%s"`, value)
+
+			} else if arg.Value.Raw == "unique" {
+
+				gormType = fmt.Sprintf(`gorm:"column:%s;uniqueIndex"`, field.Name)
+
+			} else if arg.Value.Raw == "index" {
+
+				gormType = `gorm:"index"`
+
+			} else if arg.Value.Raw == "primarykey" {
+
+				gormType = `gorm:"autoIncrement; primaryKey"`
+
+			} else if arg.Value.Raw == "notnull" {
+
+				gormType = `gorm:"not null"`
+
+			}else if arg.Value.Raw == "autoincrement" {
+				gormType = fmt.Sprintf(`gorm:"autoIncrement"`)
+
+			}
+
+		} else {
+
+			gormType = fmt.Sprintf(`gorm:"column:%s"`, field.Name)
+
+		}
+
+	}
+
+	return gormType
 
 }

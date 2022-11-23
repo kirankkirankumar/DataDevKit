@@ -12,7 +12,7 @@ import (
 )
 
 // CreateTweet is the resolver for the createTweet field.
-func (r *mutationResolver) CreateTweet(ctx context.Context, body *string) (*model.Tweet, error) {
+func (r *mutationResolver) CreateTweet(ctx context.Context, body *string, data *string) (*model.Tweet, error) {
 
 	panic(fmt.Errorf("not implemented: CreateTweet - createTweet"))
 
@@ -32,10 +32,10 @@ func (r *mutationResolver) MarkTweetRead(ctx context.Context, id int) (*bool, er
 
 }
 
-// DeleteEvent is the resolver for the deleteEvent field.
-func (r *mutationResolver) DeleteEvent(ctx context.Context, id int) (*model.Event, error) {
+// Notification is the resolver for the notification field.
+func (r *mutationResolver) Notification(ctx context.Context, total *int, typeArg *string, status *model.Status) (*model.Notification, error) {
 
-	panic(fmt.Errorf("not implemented: DeleteEvent - deleteEvent"))
+	panic(fmt.Errorf("not implemented: Notification - notification"))
 
 }
 
@@ -88,15 +88,6 @@ func (r *queryResolver) Notifications(ctx context.Context, limit *int) ([]*model
 func (r *queryResolver) NotificationsMeta(ctx context.Context) (*model.Meta, error) {
 
 	var data *model.Meta
-	r.Repo.GetData(&data)
-	return data, nil
-
-}
-
-// Events is the resolver for the Events field.
-func (r *queryResolver) Events(ctx context.Context) (*model.Event, error) {
-
-	var data *model.Event
 	r.Repo.GetData(&data)
 	return data, nil
 
