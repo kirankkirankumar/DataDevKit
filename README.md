@@ -89,6 +89,9 @@ go: added gorm.io/gorm v1.24.1
 
 
  # Clone repository using "git clone github.com/kirankkirankumar/gqlgen-ddk" command
+===============
+Clone the Repo
+===============
 
 - Update the environment variables in .env file
 - Run command "source .env" to load the variables

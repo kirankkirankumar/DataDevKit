@@ -64,10 +64,8 @@ func (r *repository) GetData(model interface{}) error {
 
 func (r *repository) createData(model interface{}) error {
 
-	// for _, tables := range preLoad {
-	// 	db.Preload(tables)
-	// }
-	result := r.db.Preload(clause.Associations).Find(model)
+	
+	result := r.db.Create(model)
 
 	return result.Error
 }

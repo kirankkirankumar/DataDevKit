@@ -635,6 +635,7 @@ type User {
     full_name: String!
     name: String! 
     avatar_url: Url!
+
 }
 
 type Stat {
@@ -651,8 +652,8 @@ type Tweet {
     id: ID! @constraint(type:"primarykey")
     body: String!
     date: Time!
-    Author: User!
-    Stats: Stat!
+    Author: [User]!
+    Stats: [Stat]!
     Data:JSON
 }
 
@@ -3275,9 +3276,9 @@ func (ec *executionContext) _Tweet_Author(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.([]*model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Tweet_Author(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3335,9 +3336,9 @@ func (ec *executionContext) _Tweet_Stats(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Stat)
+	res := resTmp.([]*model.Stat)
 	fc.Result = res
-	return ec.marshalNStat2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐStat(ctx, field.Selections, res)
+	return ec.marshalNStat2ᚕᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐStat(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Tweet_Stats(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6529,14 +6530,42 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalNStat2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐStat(ctx context.Context, sel ast.SelectionSet, v *model.Stat) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
+func (ec *executionContext) marshalNStat2ᚕᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐStat(ctx context.Context, sel ast.SelectionSet, v []*model.Stat) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
 	}
-	return ec._Stat(ctx, sel, v)
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOStat2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐStat(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -6584,14 +6613,42 @@ func (ec *executionContext) marshalNUrl2string(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
+func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
 	}
-	return ec._User(ctx, sel, v)
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOUser2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐUser(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -7054,6 +7111,13 @@ func (ec *executionContext) marshalOPost2ᚖgithubᚗcomᚋkirankkirankumarᚋgq
 		return graphql.Null
 	}
 	return ec._Post(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOStat2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐStat(ctx context.Context, sel ast.SelectionSet, v *model.Stat) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Stat(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOStatus2ᚖgithubᚗcomᚋkirankkirankumarᚋgqlgenᚑddkᚋgraphᚋmodelᚐStatus(ctx context.Context, v interface{}) (*model.Status, error) {

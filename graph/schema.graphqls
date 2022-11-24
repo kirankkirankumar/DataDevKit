@@ -24,6 +24,7 @@ type User {
     full_name: String!
     name: String! 
     avatar_url: Url!
+
 }
 
 type Stat {
@@ -40,8 +41,8 @@ type Tweet {
     id: ID! @constraint(type:"primarykey")
     body: String!
     date: Time!
-    Author: User!
-    Stats: Stat!
+    Author: [User]!
+    Stats: [Stat]!
     Data:JSON
 }
 
@@ -99,4 +100,11 @@ type Blogger {
 type Blog {
     id :ID! @constraint(type:"primarykey")
     text: String!
+}
+
+type Product{
+    id :ID! @constraint(type:"primarykey")
+    title : String @constraint(type:"primarykey")
+    releaseDate: Time
+
 }

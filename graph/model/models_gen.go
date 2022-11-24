@@ -93,9 +93,9 @@ type Tweet struct {
 	Body     string    `json:"body" `
 	Date     time.Time `json:"date" `
 	AuthorID string    `json:"author_id" gorm:"unique"`
-	Author   *User     `json:"Author" gorm:"foreignKey:AuthorID"`
+	Author   []*User   `json:"Author" gorm:"foreignKey:ID;references:AuthorID"`
 	StatsID  string    `json:"stats_id" gorm:"unique"`
-	Stats    *Stat     `json:"Stats" gorm:"foreignKey:StatsID"`
+	Stats    []*Stat   `json:"Stats" gorm:"foreignKey:ID;references:StatsID"`
 	Data     *string   `json:"Data" `
 
 	CreatedAt int // Set to current time if it is zero on creating
@@ -173,6 +173,13 @@ func GetStructs() map[string]interface{} {
 	structs["Stat"] = Stat{}
 	structs["Tweet"] = Tweet{}
 	structs["User"] = User{}
+	structs["Product"]=Product{}
 
 	return structs
+}
+type Product struct {  
+    ID       string `gorm:"primaryKey"`  
+LanguageCode string `gorm:"primaryKey"`  
+Code         string  
+Name         string
 }

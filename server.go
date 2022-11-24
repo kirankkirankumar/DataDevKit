@@ -45,7 +45,7 @@ func main() {
 	}
     
 	//started
-	fmt.Printf("Welcome")
+	fmt.Printf("Welcome to DDK ")
 	s, err := service.NewService(repo)
 
 	//s.GenerateModel()
@@ -58,9 +58,7 @@ func main() {
 	c := generated.Config{Resolvers: &graph.Resolver{Repo: repo}}
 
     c.Directives.Mapping = func(ctx context.Context, obj interface{}, next graphql.Resolver, typeArg *string) (interface{}, error) {
-
       return next(ctx)
-
    }
 
    c.Directives.Constraint = func(ctx context.Context, obj interface{}, next graphql.Resolver, typeArg *string, value *string) (interface{}, error) {
